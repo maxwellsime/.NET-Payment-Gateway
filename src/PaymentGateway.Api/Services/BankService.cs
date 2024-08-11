@@ -1,0 +1,20 @@
+﻿using PaymentGateway.Api.Models.Requests;
+using PaymentGateway.Api.Models.Responses;
+
+namespace PaymentGateway.Api.Services;
+
+public class BankService(string bankURL, HttpClient client)
+{
+    private readonly string _bankURL = bankURL;
+    private readonly HttpClient _httpClient = client;
+
+    public async Task<bool> MakePaymentAsync(BankPaymentRequest request)
+    {
+        Console.WriteLine("BankService :: Contacting bank for payment.");
+
+        JsonContent content = JsonContent.Create(request);
+        var httpResponse = await _httpClient.PostAsync($"{_bankURL}/payments", content);
+
+        return httpResponse.Content.ReadFromJsonAsync<BankResponse>().Result.Authorized;
+    }
+}
