@@ -1,18 +1,22 @@
-# Instructions for candidates
+# Mock Payment-Gateway
 
-This is the .NET version of the Payment Gateway challenge. If you haven't already read this [README.md](https://github.com/cko-recruitment/.github/tree/beta) on the details of this exercise, please do so now. 
+REST API mimicking a payment gateway service using .NET. External bank is mocked using [Mountebank]("http://www.mbtest.org/docs/gettingStarted"). Testing is done with XUnit and Moq.
 
-## Template structure
-```
-src/
-    PaymentGateway.Api - a skeleton ASP.NET Core Web API
-test/
-    PaymentGateway.Api.Tests - an empty xUnit test project
-imposters/ - contains the bank simulator configuration. Don't change this
+## Using
+Write `dotnet run` inside the terminal. Use opened Swagger webpage to use api endpoints.
 
-.editorconfig - don't change this. It ensures a consistent set of rules for submissions when reformatting code
-docker-compose.yml - configures the bank simulator
-PaymentGateway.sln
-```
+### Make Payment
+These are the only two valid requests the mocked bank can interact with.
 
-Feel free to change the structure of the solution, use a different test library etc.
+| Card number      | Expiry date | Currency | Amount | CVV | Authorized  | Authorization code                   |
+|------------------|-------------|----------|--------|-----|-------------|--------------------------------------|
+| 2222405343248877 | 04/2025     | GBP      | 100    | 123 | true        | 0bb07405-6d44-4b50-a14f-7ae0beff13ad |
+| 2222405343248112 | 01/2026     | USD      | 60000  | 456 | false       | < empty >                            |
+
+
+## Running tests
+Write `dotnet test` inside the terminal.
+
+## TODO
+- [ ] Modularize testing
+- [ ] Add database
