@@ -20,3 +20,6 @@ Write `dotnet test` inside the terminal.
 ## TODO
 - [ ] Modularize testing
 - [ ] Add database
+    - [ ] Unique models for handling repository service
+- [ ] Improved error handling
+- [ ] Implement better logger and logging
