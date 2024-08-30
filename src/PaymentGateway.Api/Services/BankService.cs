@@ -10,11 +10,19 @@ public class BankService(string bankURL, HttpClient client)
 
     public async Task<bool> MakePaymentAsync(BankPaymentRequest request)
     {
-        Console.WriteLine("BankService :: Contacting bank for payment.");
+        try
+        {
+            Console.WriteLine("BankService :: Contacting bank for payment.");
 
-        JsonContent content = JsonContent.Create(request);
-        var httpResponse = await _httpClient.PostAsync($"{_bankURL}/payments", content);
+            JsonContent content = JsonContent.Create(request);
+            var httpResponse = await _httpClient.PostAsync($"{_bankURL}/payments", content);
 
-        return httpResponse.Content.ReadFromJsonAsync<BankResponse>().Result.Authorized;
+            return httpResponse.Content.ReadFromJsonAsync<BankResponse>().Result.Authorized;
+        }
+        catch (Exception) {
+            Console.WriteLine("BankService :: Making payment to bank responded with an error.");
+
+            throw;
+        }
     }
 }

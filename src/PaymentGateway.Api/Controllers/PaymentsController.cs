@@ -39,11 +39,20 @@ public class PaymentsController : Controller
 
         if (this.ModelState.IsValid)
         {
-            var paymentResponse = await _bankService.MakePaymentAsync(request.ToBankPaymentRequest());
+            try
+            {
+                var paymentResponse = await _bankService.MakePaymentAsync(request.ToBankPaymentRequest());
 
-            return paymentResponse
-                ? new OkObjectResult(_paymentsRepository.Add(request, PaymentStatus.Authorized))
-                : new BadRequestObjectResult(_paymentsRepository.Add(request, PaymentStatus.Declined));
+                return paymentResponse
+                    ? new OkObjectResult(_paymentsRepository.Add(request, PaymentStatus.Authorized))
+                    : new BadRequestObjectResult(_paymentsRepository.Add(request, PaymentStatus.Declined));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"PaymentsController :: Request caught exception {ex.Message}");
+
+                return StatusCode(500, ex);
+            }
         }
         else
         {
