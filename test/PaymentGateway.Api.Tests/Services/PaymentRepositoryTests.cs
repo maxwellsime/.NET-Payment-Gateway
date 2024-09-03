@@ -23,6 +23,7 @@ public class PaymentRepositoryTests
     [Fact]
     public async Task GetThrowsExceptionUponInvalidGuid()
     {
-        Assert.Throws<ArgumentNullException>(Repository.Get(Guid.Empty));
+        // Assert 
+        Assert.Throws<ArgumentNullException>(() => Repository.Get(Guid.Empty));
     }
 }

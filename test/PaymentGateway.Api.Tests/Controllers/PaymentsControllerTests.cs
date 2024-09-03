@@ -6,7 +6,6 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 
-using Moq;
 using Moq.Protected;
 
 using PaymentGateway.Api.Controllers;
