@@ -31,8 +31,8 @@ public class BankServiceTests
         var response = await BankService.MakePaymentAsync(PaymentGatewayTestFixtures.PaymentRequest.ToBankPaymentRequest());
 
         // Assert
-        MockHttpHandler.Verify();
         Assert.Equal(response, PaymentGatewayTestFixtures.ValidBankResponse.Authorized);
+        MockHttpHandler.Protected().Verify("SendAsync", Times.Exactly(1), ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>());
     }
 
     [Fact]
@@ -53,8 +53,8 @@ public class BankServiceTests
         var response = await BankService.MakePaymentAsync(PaymentGatewayTestFixtures.RejectedPaymentRequest.ToBankPaymentRequest());
 
         // Assert
-        MockHttpHandler.Verify();
         Assert.Equal(response, PaymentGatewayTestFixtures.InvalidBankResponse.Authorized);
+        MockHttpHandler.Protected().Verify("SendAsync", Times.Exactly(1), ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>());
     }
 
     [Fact]
@@ -69,6 +69,6 @@ public class BankServiceTests
 
         // Act
         await Assert.ThrowsAsync<Exception>(() => BankService.MakePaymentAsync(PaymentGatewayTestFixtures.PaymentRequest.ToBankPaymentRequest()));
-        MockHttpHandler.Verify();
+        MockHttpHandler.Protected().Verify("SendAsync", Times.Exactly(1), ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>());
     }
 }
