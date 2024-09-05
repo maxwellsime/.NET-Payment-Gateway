@@ -15,8 +15,8 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddSingleton<PaymentsRepository>();
-builder.Services.AddSingleton(new BankService("http://localhost:8080", new()));
+builder.Services.AddSingleton<IPaymentsRepository, PaymentsRepository>();
+builder.Services.AddSingleton<IBankService>(new BankService("http://localhost:8080", new()));
 
 var app = builder.Build();
 

@@ -3,7 +3,11 @@ using PaymentGateway.Api.Models.Responses;
 
 namespace PaymentGateway.Api.Services;
 
-public class BankService(string bankURL, HttpClient client)
+public interface IBankService {
+    Task<bool> MakePaymentAsync(BankPaymentRequest request);
+}
+
+public class BankService(string bankURL, HttpClient client) : IBankService
 {
     private readonly string _bankURL = bankURL;
     private readonly HttpClient _httpClient = client;
