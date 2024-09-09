@@ -18,7 +18,7 @@ These are the only two valid requests the mocked bank can interact with.
 Write `dotnet test` inside the terminal.
 
 ## TODO
-- [ ] Modularize testing
+- [x] Modularize testing
 - [ ] Add database
     - [ ] Unique models for handling repository service
 - [ ] Improved error handling
