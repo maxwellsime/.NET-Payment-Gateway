@@ -1,15 +1,13 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
-using System.Text;
-using System.Text.Json;
+using System.Runtime.CompilerServices;
 
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 
-using Moq.Protected;
-
 using PaymentGateway.Api.Controllers;
 using PaymentGateway.Api.Enums;
+using PaymentGateway.Api.Models.Requests;
 using PaymentGateway.Api.Models.Responses;
 using PaymentGateway.Api.Services;
 
@@ -17,28 +15,33 @@ namespace PaymentGateway.Api.Tests.Controllers;
 
 public class PaymentsControllerTests
 {
-    private static readonly PaymentsRepository PaymentsRepository = new();
-    private static readonly Mock<HttpMessageHandler> MockHttpHandler = new(MockBehavior.Strict);
-    private static readonly HttpClient MockHttpClient = new(MockHttpHandler.Object);
-    private static readonly BankService BankService = new(PaymentGatewayTestFixtures.BankURL, MockHttpClient);
-    private static readonly WebApplicationFactory<PaymentsController> WebApplicationFactory = new();
-    private readonly HttpClient _client = WebApplicationFactory.WithWebHostBuilder(builder =>
-        builder.ConfigureServices(services => ((ServiceCollection)services)
-            .AddSingleton(PaymentsRepository)
-            .AddSingleton(_ => BankService)))
-        .CreateClient();
+    private static readonly Mock<IPaymentsRepository> PaymentsRepository = new();
+    private static readonly Mock<IBankService> BankService = new();
+
+    public static HttpClient TestHttpClientFactory() =>
+        new WebApplicationFactory<PaymentsController>().WithWebHostBuilder(builder =>
+            builder.ConfigureServices(services =>
+            {
+                services.AddScoped(_ => PaymentsRepository.Object);
+                services.AddScoped(_ => BankService.Object);
+            })).CreateClient();
 
     [Fact]
     public async Task RetrievesAPaymentSuccessfully()
     {
         // Arrange
-        var expectedResponse = PaymentsRepository.Add(PaymentGatewayTestFixtures.PaymentRequest, PaymentStatus.Authorized);
+        PaymentsRepository
+            .Setup(repository => repository.Get(It.IsAny<Guid>()))
+            .Returns(PaymentGatewayTestFixtures.PaymentRequest.ToPostPaymentResponse(PaymentStatus.Authorized, Guid.NewGuid()))
+            .Verifiable();
+        var client = TestHttpClientFactory();
 
         // Act
-        var response = await _client.GetAsync($"/api/Payments/{expectedResponse.Id}");
+        var response = await client.GetAsync($"/api/Payments/{PaymentGatewayTestFixtures.Id}");
         var paymentResponse = await response.Content.ReadFromJsonAsync<PostPaymentResponse?>();
 
         // Assert
+        PaymentsRepository.Verify(repository => repository.Get(PaymentGatewayTestFixtures.Id), Times.Exactly(1));
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.NotNull(paymentResponse);
     }
@@ -46,8 +49,11 @@ public class PaymentsControllerTests
     [Fact]
     public async Task Returns404IfPaymentNotFound()
     {
+        // Arrange
+        var client = TestHttpClientFactory();
+
         // Act
-        var response = await _client.GetAsync($"/api/Payments/{PaymentGatewayTestFixtures.InvalidId}");
+        var response = await client.GetAsync($"/api/Payments/{PaymentGatewayTestFixtures.InvalidId}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -57,64 +63,68 @@ public class PaymentsControllerTests
     public async Task CompletesAnAuthorizedPayment()
     {
         // Arrange
-        var expectedResponse = PaymentGatewayTestFixtures.PaymentRequest.ToPostPaymentResponse(PaymentStatus.Authorized, PaymentGatewayTestFixtures.Id);
-        MockHttpHandler.Protected()
-            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
-            .ReturnsAsync(new HttpResponseMessage()
-            {
-                StatusCode = HttpStatusCode.OK,
-                Content = new StringContent(JsonSerializer.Serialize(PaymentGatewayTestFixtures.ValidBankResponse), Encoding.UTF8, "application/json")
-            })
+        PaymentsRepository.Invocations.Clear();
+        BankService
+            .Setup(bank => bank.MakePaymentAsync(PaymentGatewayTestFixtures.PaymentRequest.ToBankPaymentRequest()).Result)
+            .Returns(true)
             .Verifiable();
+        PaymentsRepository
+            .Setup(repository => repository.Add(PaymentGatewayTestFixtures.PaymentRequest, PaymentStatus.Authorized))
+            .Returns(PaymentGatewayTestFixtures.PaymentRequest.ToPostPaymentResponse(PaymentStatus.Authorized, Guid.NewGuid()))
+            .Verifiable();
+        var client = TestHttpClientFactory();
 
         // Act
-        var response = await _client.PostAsync($"/api/Payments/MakePayment", JsonContent.Create(PaymentGatewayTestFixtures.PaymentRequest));
+        var response = await client.PostAsync($"/api/Payments/MakePayment", JsonContent.Create(PaymentGatewayTestFixtures.PaymentRequest));
         var paymentResponse = await response.Content.ReadFromJsonAsync<PostPaymentResponse>();
 
         // Assert
+        BankService.Verify(bank => bank.MakePaymentAsync(PaymentGatewayTestFixtures.PaymentRequest.ToBankPaymentRequest()), Times.Exactly(1));
+        PaymentsRepository.Verify(repository => repository.Add(PaymentGatewayTestFixtures.PaymentRequest, PaymentStatus.Authorized), Times.Exactly(1));
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Equal(expectedResponse.Status, paymentResponse!.Status);
-        MockHttpHandler.Protected().Verify("SendAsync", Times.Exactly(1), ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>());
+        Assert.Equal(PaymentStatus.Authorized, paymentResponse!.Status);
     }
 
     [Fact]
     public async Task Returns400IfPaymentDeclined()
     {
         // Arrange
-        MockHttpHandler.Invocations.Clear();
-        var expectedResponse = PaymentGatewayTestFixtures.PaymentRequest.ToPostPaymentResponse(PaymentStatus.Declined, PaymentGatewayTestFixtures.Id);
-        MockHttpHandler.Protected()
-            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
-            .ReturnsAsync(new HttpResponseMessage()
-            {
-                StatusCode = HttpStatusCode.OK,
-                Content = new StringContent(JsonSerializer.Serialize(PaymentGatewayTestFixtures.InvalidBankResponse), Encoding.UTF8, "application/json")
-            })
+        BankService.Invocations.Clear();
+        PaymentsRepository.Invocations.Clear();
+        BankService
+            .Setup(bank => bank.MakePaymentAsync(It.IsAny<BankPaymentRequest>()))
+            .Returns(Task.FromResult(false))
             .Verifiable();
+        PaymentsRepository
+            .Setup(repository => repository.Add(PaymentGatewayTestFixtures.PaymentRequest, PaymentStatus.Declined))
+            .Returns(PaymentGatewayTestFixtures.PaymentRequest.ToPostPaymentResponse(PaymentStatus.Declined, Guid.NewGuid()))
+            .Verifiable();
+        var client = TestHttpClientFactory();
 
         // Act
-        var response = await _client.PostAsync($"/api/Payments/MakePayment", JsonContent.Create(PaymentGatewayTestFixtures.PaymentRequest));
+        var response = await client.PostAsync($"/api/Payments/MakePayment", JsonContent.Create(PaymentGatewayTestFixtures.PaymentRequest));
         var paymentResponse = await response.Content.ReadFromJsonAsync<PostPaymentResponse>();
 
         // Assert
+        BankService.Verify(bank => bank.MakePaymentAsync(PaymentGatewayTestFixtures.PaymentRequest.ToBankPaymentRequest()), Times.Exactly(1));
+        PaymentsRepository.Verify(repository => repository.Add(PaymentGatewayTestFixtures.PaymentRequest, PaymentStatus.Declined), Times.Exactly(1));
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Equal(expectedResponse.Status, paymentResponse!.Status);
-        MockHttpHandler.Protected().Verify("SendAsync", Times.Exactly(1), ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>());
+        Assert.Equal(PaymentStatus.Declined, paymentResponse!.Status);
     }
 
     [Fact]
     public async Task Returns400IfPaymentRequestRejected()
     {
         // Arrange
-        var expectedResponse = PaymentGatewayTestFixtures.PaymentRequest.ToPostPaymentResponse(PaymentStatus.Rejected, null, ["error"]);
+        var client = TestHttpClientFactory();
 
         // Act
-        var response = await _client.PostAsync($"/api/Payments/MakePayment", JsonContent.Create(PaymentGatewayTestFixtures.RejectedPaymentRequest));
+        var response = await client.PostAsync($"/api/Payments/MakePayment", JsonContent.Create(PaymentGatewayTestFixtures.RejectedPaymentRequest));
         var paymentResponse = await response.Content.ReadFromJsonAsync<PostPaymentResponse>();
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Equal(expectedResponse.Status, paymentResponse!.Status);
+        Assert.Equal(PaymentStatus.Rejected, paymentResponse!.Status);
         Assert.NotNull(paymentResponse.Errors);
     }
 }
