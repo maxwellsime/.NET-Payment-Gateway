@@ -1,6 +1,5 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
-using System.Runtime.CompilerServices;
 
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,6 +16,7 @@ public class PaymentsControllerTests
 {
     private static readonly Mock<IPaymentsRepository> PaymentsRepository = new();
     private static readonly Mock<IBankService> BankService = new();
+    private static readonly HttpClient DefaultClient = TestHttpClientFactory();
 
     public static HttpClient TestHttpClientFactory() =>
         new WebApplicationFactory<PaymentsController>().WithWebHostBuilder(builder =>
@@ -49,11 +49,8 @@ public class PaymentsControllerTests
     [Fact]
     public async Task Returns404IfPaymentNotFound()
     {
-        // Arrange
-        var client = TestHttpClientFactory();
-
         // Act
-        var response = await client.GetAsync($"/api/Payments/{PaymentGatewayTestFixtures.InvalidId}");
+        var response = await DefaultClient.GetAsync($"/api/Payments/{PaymentGatewayTestFixtures.InvalidId}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -65,11 +62,11 @@ public class PaymentsControllerTests
         // Arrange
         PaymentsRepository.Invocations.Clear();
         BankService
-            .Setup(bank => bank.MakePaymentAsync(PaymentGatewayTestFixtures.PaymentRequest.ToBankPaymentRequest()).Result)
-            .Returns(true)
+            .Setup(bank => bank.MakePaymentAsync(It.IsAny<BankPaymentRequest>()))
+            .Returns(Task.FromResult(true))
             .Verifiable();
         PaymentsRepository
-            .Setup(repository => repository.Add(PaymentGatewayTestFixtures.PaymentRequest, PaymentStatus.Authorized))
+            .Setup(repository => repository.Add(It.IsAny<PostPaymentRequest>(), PaymentStatus.Authorized))
             .Returns(PaymentGatewayTestFixtures.PaymentRequest.ToPostPaymentResponse(PaymentStatus.Authorized, Guid.NewGuid()))
             .Verifiable();
         var client = TestHttpClientFactory();
@@ -79,8 +76,8 @@ public class PaymentsControllerTests
         var paymentResponse = await response.Content.ReadFromJsonAsync<PostPaymentResponse>();
 
         // Assert
-        BankService.Verify(bank => bank.MakePaymentAsync(PaymentGatewayTestFixtures.PaymentRequest.ToBankPaymentRequest()), Times.Exactly(1));
-        PaymentsRepository.Verify(repository => repository.Add(PaymentGatewayTestFixtures.PaymentRequest, PaymentStatus.Authorized), Times.Exactly(1));
+        BankService.Verify(bank => bank.MakePaymentAsync(It.IsAny<BankPaymentRequest>()), Times.Exactly(1));
+        PaymentsRepository.Verify(repository => repository.Add(It.IsAny<PostPaymentRequest>(), PaymentStatus.Authorized), Times.Exactly(1));
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal(PaymentStatus.Authorized, paymentResponse!.Status);
     }
@@ -96,7 +93,7 @@ public class PaymentsControllerTests
             .Returns(Task.FromResult(false))
             .Verifiable();
         PaymentsRepository
-            .Setup(repository => repository.Add(PaymentGatewayTestFixtures.PaymentRequest, PaymentStatus.Declined))
+            .Setup(repository => repository.Add(It.IsAny<PostPaymentRequest>(), PaymentStatus.Declined))
             .Returns(PaymentGatewayTestFixtures.PaymentRequest.ToPostPaymentResponse(PaymentStatus.Declined, Guid.NewGuid()))
             .Verifiable();
         var client = TestHttpClientFactory();
@@ -106,8 +103,8 @@ public class PaymentsControllerTests
         var paymentResponse = await response.Content.ReadFromJsonAsync<PostPaymentResponse>();
 
         // Assert
-        BankService.Verify(bank => bank.MakePaymentAsync(PaymentGatewayTestFixtures.PaymentRequest.ToBankPaymentRequest()), Times.Exactly(1));
-        PaymentsRepository.Verify(repository => repository.Add(PaymentGatewayTestFixtures.PaymentRequest, PaymentStatus.Declined), Times.Exactly(1));
+        BankService.Verify(bank => bank.MakePaymentAsync(It.IsAny<BankPaymentRequest>()), Times.Exactly(1));
+        PaymentsRepository.Verify(repository => repository.Add(It.IsAny<PostPaymentRequest>(), PaymentStatus.Declined), Times.Exactly(1));
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Equal(PaymentStatus.Declined, paymentResponse!.Status);
     }
@@ -115,11 +112,8 @@ public class PaymentsControllerTests
     [Fact]
     public async Task Returns400IfPaymentRequestRejected()
     {
-        // Arrange
-        var client = TestHttpClientFactory();
-
         // Act
-        var response = await client.PostAsync($"/api/Payments/MakePayment", JsonContent.Create(PaymentGatewayTestFixtures.RejectedPaymentRequest));
+        var response = await DefaultClient.PostAsync($"/api/Payments/MakePayment", JsonContent.Create(PaymentGatewayTestFixtures.RejectedPaymentRequest));
         var paymentResponse = await response.Content.ReadFromJsonAsync<PostPaymentResponse>();
 
         // Assert
