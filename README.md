@@ -19,8 +19,11 @@ Write `dotnet test` inside the terminal.
 
 ## TODO
 - [x] Modularize testing
-- [ ] Add database
+- [x] Add database
     - [ ] Unique models for handling repository service
 - [ ] Improved error handling
 - [ ] Implement better logger and logging
-- [ ] Create more valid test data fields in Mountebank mock
+- [ ] Enable full dockerisation, allowing for the app to be run entirely through `docker-compose`
+    - [x] Create functional Dockerfile
+    - [ ] Enable configuration through docker-compose
+    - [ ] Enable database container
