@@ -7,7 +7,7 @@ namespace PaymentGateway.Api.Models.Responses;
 
 public class PostPaymentResponse
 {
-    [JsonPropertyName("id")]
+    [JsonPropertyName("_id")]
     public Guid? Id { get; set; }
 
     [Required]

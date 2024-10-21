@@ -21,7 +21,7 @@ public class PaymentsController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<PostPaymentResponse?>> GetPaymentAsync(Guid id)
+    public async Task<ActionResult<PostPaymentResponse?>> GetPaymentAsync(string id)
     {
         Console.WriteLine($"PaymentsController :: Getting payment history of id {id}.");
 

@@ -1,8 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
 using PaymentGateway.Api.Enums;
+using PaymentGateway.Api.Models.Entities;
 using PaymentGateway.Api.Models.Responses;
 using PaymentGateway.Api.Utilities;
+
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace PaymentGateway.Api.Models.Requests;
 
@@ -49,4 +52,14 @@ public class PostPaymentRequest(string cardNumber, int expiryMonth, int expiryYe
     }
 
     public BankPaymentRequest ToBankPaymentRequest() => new(this);
+
+    public Payment ToEntity(PaymentStatus status) => new()
+    {
+        PaymentDate = DateTime.Now,
+        Status = status,
+        Amount = Amount,
+        CardNumberLastFour = (CardNumber.Length) - 4 > 0 ? CardNumber[^4..] : CardNumber,
+        Currency = Currency,
+        ExpirationDate = new DateOnly(ExpiryYear, ExpiryMonth, 1)
+    };
 }
