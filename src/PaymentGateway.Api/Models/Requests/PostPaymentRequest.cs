@@ -2,10 +2,7 @@
 
 using PaymentGateway.Api.Enums;
 using PaymentGateway.Api.Models.Entities;
-using PaymentGateway.Api.Models.Responses;
 using PaymentGateway.Api.Utilities;
-
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace PaymentGateway.Api.Models.Requests;
 
@@ -33,23 +30,6 @@ public class PostPaymentRequest(string cardNumber, int expiryMonth, int expiryYe
     [Required]
     [Range(000, 999, ErrorMessage = "Cvv only accepts 3 character long strings.")]
     public int Cvv { get; } = cvv;
-
-    public PostPaymentResponse ToPostPaymentResponse(PaymentStatus status, Guid? id = null, List<string>? errors = null)
-    {
-        PostPaymentResponse response = new()
-        {
-            Id = id,
-            Status = status,
-            Amount = Amount,
-            CardNumberLastFour = (CardNumber.Length) - 4 > 0 ? CardNumber[^4..] : CardNumber,
-            Currency = Currency,
-            Errors = errors,
-            ExpiryMonth = ExpiryMonth,
-            ExpiryYear = ExpiryYear,
-        };
-
-        return response;
-    }
 
     public BankPaymentRequest ToBankPaymentRequest() => new(this);
 

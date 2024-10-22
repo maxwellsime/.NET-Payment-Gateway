@@ -3,14 +3,21 @@ using PaymentGateway.Api.Models.Responses;
 
 namespace PaymentGateway.Api.Services;
 
-public interface IBankService {
+public interface IBankService
+{
     Task<bool> MakePaymentAsync(BankPaymentRequest request);
 }
 
-public class BankService(string bankURL, HttpClient client) : IBankService
+public class BankService : IBankService
 {
-    private readonly string _bankURL = bankURL;
-    private readonly HttpClient _httpClient = client;
+    private readonly string _bankURL;
+    private readonly HttpClient _httpClient;
+
+    public BankService(IConfiguration configuration, HttpClient? client) 
+    {
+        _bankURL = configuration.GetConnectionString("BankService")!;
+        _httpClient = client ?? new();
+    }
 
     public async Task<bool> MakePaymentAsync(BankPaymentRequest request)
     {
@@ -23,7 +30,8 @@ public class BankService(string bankURL, HttpClient client) : IBankService
 
             return httpResponse.Content.ReadFromJsonAsync<BankResponse>().Result.Authorized;
         }
-        catch (Exception) {
+        catch (Exception)
+        {
             Console.WriteLine("BankService :: Making payment to bank responded with an error.");
 
             throw;

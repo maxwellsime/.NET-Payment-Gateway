@@ -1,28 +1,24 @@
-﻿using PaymentGateway.Api.Enums;
-using PaymentGateway.Api.Models.Requests;
-using PaymentGateway.Api.Models.Responses;
-using MongoDB.Driver;
+﻿using MongoDB.Driver;
+
+using PaymentGateway.Api.Enums;
 using PaymentGateway.Api.Models.Entities;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http.HttpResults;
+using PaymentGateway.Api.Models.Requests;
 
 namespace PaymentGateway.Api.Services;
 
 public interface IPaymentsRepository
 {
-    Task<Payment> Add(PostPaymentRequest payment, PaymentStatus status);
+    Task<Payment> Add(PostPaymentRequest paymentRequest, PaymentStatus status);
     Task<Payment?> Get(string id);
 }
 
 public class PaymentsRepository : IPaymentsRepository
 {
-    private readonly IConfiguration _configuration;
     private readonly IMongoCollection<Payment>? _table;
 
-    public PaymentsRepository(IConfiguration configuration) {
-        _configuration = configuration;
-
-        var connectionString = _configuration.GetConnectionString("DbConnection");
+    public PaymentsRepository(IConfiguration configuration)
+    {
+        var connectionString = configuration.GetConnectionString("DbConnection");
         var mongoUrl = MongoUrl.Create(connectionString);
         var mongoClient = new MongoClient(mongoUrl);
         var database = mongoClient.GetDatabase(mongoUrl.DatabaseName);

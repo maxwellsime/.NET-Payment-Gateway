@@ -8,7 +8,7 @@ namespace PaymentGateway.Api.Models.Responses;
 public class PostPaymentResponse
 {
     [JsonPropertyName("_id")]
-    public Guid? Id { get; set; }
+    public string? Id { get; set; }
 
     [Required]
     [JsonPropertyName("status")]
@@ -34,7 +34,4 @@ public class PostPaymentResponse
     [Required]
     [JsonPropertyName("amount")]
     public int Amount { get; set; }
-
-    [JsonPropertyName("errors")]
-    public List<string>? Errors { get; set; }
 }

@@ -9,23 +9,17 @@ namespace PaymentGateway.Api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class PaymentsController : ControllerBase
+public class PaymentsController(IPaymentsRepository paymentsRepository, IBankService bankService) : ControllerBase
 {
-    private readonly IPaymentsRepository _paymentsRepository;
-    private readonly IBankService _bankService;
+    private readonly IPaymentsRepository _paymentsRepository = paymentsRepository;
+    private readonly IBankService _bankService = bankService;
 
-    public PaymentsController(IPaymentsRepository paymentsRepository, IBankService bankService)
-    {
-        _paymentsRepository = paymentsRepository;
-        _bankService = bankService;
-    }
-
-    [HttpGet("{id:guid}")]
+    [HttpGet("{id:string}")]
     public async Task<ActionResult<PostPaymentResponse?>> GetPaymentAsync(string id)
     {
         Console.WriteLine($"PaymentsController :: Getting payment history of id {id}.");
 
-        var payment = _paymentsRepository.Get(id);
+        var payment = await _paymentsRepository.Get(id);
 
         return payment != null
             ? new OkObjectResult(payment)
@@ -37,33 +31,19 @@ public class PaymentsController : ControllerBase
     {
         Console.WriteLine("PaymentsController :: Making payment.");
 
-        if (this.ModelState.IsValid)
+        try
         {
-            try
-            {
-                var paymentResponse = await _bankService.MakePaymentAsync(request.ToBankPaymentRequest());
+            var paymentResponse = await _bankService.MakePaymentAsync(request.ToBankPaymentRequest());
 
-                return paymentResponse
-                    ? new OkObjectResult(_paymentsRepository.Add(request, PaymentStatus.Authorized))
-                    : new BadRequestObjectResult(_paymentsRepository.Add(request, PaymentStatus.Declined));
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"PaymentsController :: Request caught exception {ex.Message}");
-
-                return StatusCode(500, ex);
-            }
+            return paymentResponse
+                ? new OkObjectResult(_paymentsRepository.Add(request, PaymentStatus.Authorized))
+                : new BadRequestObjectResult(_paymentsRepository.Add(request, PaymentStatus.Declined));
         }
-        else
+        catch (Exception ex)
         {
-            Console.WriteLine("PaymentsController :: Request invalid causing rejection.");
+            Console.WriteLine($"PaymentsController :: Request caught exception {ex.Message}");
 
-            var errors = ModelState.Values
-                .SelectMany(x => x.Errors)
-                .Select(e => e.ErrorMessage)
-                .ToList();
-
-            return new BadRequestObjectResult(request.ToPostPaymentResponse(PaymentStatus.Rejected, null, errors));
+            return StatusCode(500, ex);
         }
     }
 }
