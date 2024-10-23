@@ -14,19 +14,31 @@ public class PaymentsController(IPaymentsRepository paymentsRepository, IBankSer
     private readonly IPaymentsRepository _paymentsRepository = paymentsRepository;
     private readonly IBankService _bankService = bankService;
 
-    [HttpGet("{id:string}")]
+    [HttpGet("history-id/{id}")]
     public async Task<ActionResult<PostPaymentResponse?>> GetPaymentAsync(string id)
     {
         Console.WriteLine($"PaymentsController :: Getting payment history of id {id}.");
 
-        var payment = await _paymentsRepository.Get(id);
+        var payment = await _paymentsRepository.GetById(id);
 
         return payment != null
             ? new OkObjectResult(payment)
             : new NotFoundObjectResult($"No payment with id: {id} found.");
     }
 
-    [HttpPost("MakePayment")]
+    [HttpGet("history-cardnumberlastfour/{cardNumberLastFour}")]
+    public async Task<ActionResult<List<PostPaymentResponse>>> GetPaymentsHistoryAsync(string cardNumberLastFour) 
+    {
+        Console.WriteLine($"PaymentsController :: Getting payment history for card ending in {cardNumberLastFour}.");
+
+        var payments = await _paymentsRepository.GetByCardNumber(cardNumberLastFour);
+
+        return payments.Count > 0
+            ? new OkObjectResult(payments)
+            : new NotFoundObjectResult($"No payments found for card ending in {cardNumberLastFour}.");
+    }
+
+    [HttpPost("create-payment")]
     public async Task<ActionResult<PostPaymentResponse>> CreatePaymentAsync(PostPaymentRequest request)
     {
         Console.WriteLine("PaymentsController :: Making payment.");

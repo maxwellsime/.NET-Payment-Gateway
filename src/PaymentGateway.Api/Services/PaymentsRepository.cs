@@ -9,7 +9,8 @@ namespace PaymentGateway.Api.Services;
 public interface IPaymentsRepository
 {
     Task<Payment> Add(PostPaymentRequest paymentRequest, PaymentStatus status);
-    Task<Payment?> Get(string id);
+    Task<Payment?> GetById(string id);
+    Task<List<Payment>> GetByCardNumber(string cardNumberLastFour);
 }
 
 public class PaymentsRepository : IPaymentsRepository
@@ -35,12 +36,21 @@ public class PaymentsRepository : IPaymentsRepository
         return paymentEntity;
     }
 
-    public async Task<Payment?> Get(string id)
+    public async Task<Payment?> GetById(string id)
     {
         Console.WriteLine("PaymentsRepository :: Getting payment.");
 
         var filter = Builders<Payment>.Filter.Eq(x => x.Id, id);
         var payment = await _table.Find(filter).SingleAsync();
         return payment is not null ? payment : null;
+    }
+
+    public async Task<List<Payment>> GetByCardNumber(string cardNumberLastFour)
+    {
+        Console.WriteLine("PaymentsRepository :: Getting payment by card number.");
+
+        var filter = Builders<Payment>.Filter.Eq(x => x.CardNumberLastFour, cardNumberLastFour);
+        var payments = await _table.Find(filter).ToListAsync();
+        return payments;
     }
 }

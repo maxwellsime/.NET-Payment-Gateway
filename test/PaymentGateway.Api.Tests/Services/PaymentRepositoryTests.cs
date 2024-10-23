@@ -8,13 +8,13 @@ public class PaymentRepositoryTests
     private static readonly PaymentsRepository Repository = new PaymentsRepository();
 
     [Fact]
-    public async Task GetPriorPaymentSuccessfully() 
+    public async Task GetPriorPaymentSuccessfully()
     {
         // Arrange
         var expectedResponse = Repository.Add(PaymentGatewayTestFixtures.PaymentRequest, PaymentStatus.Authorized);
 
         // Act
-        var response =  Repository.Get(expectedResponse.Id!.Value);
+        var response = Repository.Get(expectedResponse.Id!.Value);
 
         // Assert
         Assert.Equal(expectedResponse, response);
