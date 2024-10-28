@@ -14,7 +14,7 @@ public class PaymentsController(IPaymentsRepository paymentsRepository, IBankSer
     private readonly IPaymentsRepository _paymentsRepository = paymentsRepository;
     private readonly IBankService _bankService = bankService;
 
-    [HttpGet("history-id/{id}")]
+    [HttpGet("{id}")]
     public async Task<ActionResult<PostPaymentResponse?>> GetPaymentAsync(string id)
     {
         Console.WriteLine($"PaymentsController :: Getting payment history of id {id}.");
@@ -26,7 +26,7 @@ public class PaymentsController(IPaymentsRepository paymentsRepository, IBankSer
             : new NotFoundObjectResult($"No payment with id: {id} found.");
     }
 
-    [HttpGet("history-cardnumberlastfour/{cardNumberLastFour}")]
+    [HttpGet("multiple/{cardNumberLastFour}")]
     public async Task<ActionResult<List<PostPaymentResponse>>> GetPaymentsHistoryAsync(string cardNumberLastFour) 
     {
         Console.WriteLine($"PaymentsController :: Getting payment history for card ending in {cardNumberLastFour}.");
