@@ -6,7 +6,7 @@ services:
     image: bbyars/mountebank:2.8.1
     ports:
       - "2525:2525"
-      - "8080:8080"
+      - "11111:8080"
     command: --configfile /imposters/bank_simulator.ejs
     volumes:
       - type: bind
@@ -15,9 +15,13 @@ services:
   payment_gateway:
     container_name: payment_gateway
     build: .
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development # Create Docker-compose-overide for production 
+      - ASPNETCORE_HTTPS_PORT=7092
+      - ASPNETCORE_HTTP_PORTS=5000
     ports:
-      - "5000:5000"
-      - "7062:7062"
+      - "80:5000"
+      - "8080:7092"
   mongoDB:
     container_name: mongo
     image: mongo
@@ -28,4 +32,4 @@ services:
       MONGO_INITDB_ROOT_USERNAME: username
       MONGO_INITDB_ROOT_PASSWORD: password
     volumes:
-      - ./db_data/:/data/db
+     - ./db_data/:/data/db
