@@ -8,16 +8,9 @@ public interface IBankService
     Task<bool> MakePaymentAsync(BankPaymentRequest request);
 }
 
-public class BankService : IBankService
+public class BankService(HttpClient client) : IBankService
 {
-    private readonly string _bankURL;
-    private readonly HttpClient _httpClient;
-
-    public BankService(IConfiguration configuration, HttpClient? client) 
-    {
-        _bankURL = configuration.GetConnectionString("BankService")!;
-        _httpClient = client ?? new();
-    }
+    private readonly HttpClient _httpClient = client;
 
     public async Task<bool> MakePaymentAsync(BankPaymentRequest request)
     {
@@ -25,8 +18,7 @@ public class BankService : IBankService
         {
             Console.WriteLine("BankService :: Contacting bank for payment.");
 
-            JsonContent content = JsonContent.Create(request);
-            var httpResponse = await _httpClient.PostAsync($"{_bankURL}/payments", content);
+            var httpResponse = await _httpClient.PostAsJsonAsync("payments", request);
 
             return httpResponse.Content.ReadFromJsonAsync<BankResponse>().Result.Authorized;
         }

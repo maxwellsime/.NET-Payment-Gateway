@@ -11,12 +11,12 @@ namespace PaymentGateway.Api.Tests.Services;
 public class BankServiceTests
 {
     private static readonly Mock<HttpMessageHandler> MockHttpHandler = new(MockBehavior.Strict);
-    private static readonly HttpClient MockHttpClient = new(MockHttpHandler.Object);
-    private static readonly BankService BankService = new(PaymentGatewayTestFixtures.BankURL, MockHttpClient);
+    private static readonly HttpClient MockHttpClient = new(MockHttpHandler.Object) { BaseAddress = new Uri("http://localhost:80/") };
+    private static readonly BankService BankService = new(MockHttpClient);
 
     [Fact]
     public async Task RespondTrueOnAuthorizedPayment()
-    {
+    {       
         // Arrange
         MockHttpHandler.Protected()
             .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
