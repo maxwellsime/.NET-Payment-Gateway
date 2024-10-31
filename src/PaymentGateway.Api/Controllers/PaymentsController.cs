@@ -22,11 +22,11 @@ public class PaymentsController(IPaymentsRepository paymentsRepository, IBankSer
         var payment = await _paymentsRepository.GetById(id);
 
         return payment != null
-            ? new OkObjectResult(payment)
+            ? new OkObjectResult(payment.ToPaymentResponse)
             : new NotFoundObjectResult($"No payment with id: {id} found.");
     }
 
-    [HttpGet("multiple/{cardNumberLastFour}")]
+    [HttpGet("Multiple/{cardNumberLastFour}")]
     public async Task<ActionResult<List<PostPaymentResponse>>> GetPaymentsHistoryAsync(string cardNumberLastFour) 
     {
         Console.WriteLine($"PaymentsController :: Getting payment history for card ending in {cardNumberLastFour}.");
@@ -34,11 +34,14 @@ public class PaymentsController(IPaymentsRepository paymentsRepository, IBankSer
         var payments = await _paymentsRepository.GetByCardNumber(cardNumberLastFour);
 
         return payments.Count > 0
-            ? new OkObjectResult(payments)
+            ? new OkObjectResult(
+                payments.Select(record =>
+                    record.ToPaymentResponse
+                ))
             : new NotFoundObjectResult($"No payments found for card ending in {cardNumberLastFour}.");
     }
 
-    [HttpPost("create-payment")]
+    [HttpPost("Create-Payment")]
     public async Task<ActionResult<PostPaymentResponse>> CreatePaymentAsync(PostPaymentRequest request)
     {
         Console.WriteLine("PaymentsController :: Making payment.");
@@ -48,8 +51,8 @@ public class PaymentsController(IPaymentsRepository paymentsRepository, IBankSer
             var paymentResponse = await _bankService.MakePaymentAsync(request.ToBankPaymentRequest());
 
             return paymentResponse
-                ? new OkObjectResult(_paymentsRepository.Add(request, PaymentStatus.Authorized))
-                : new BadRequestObjectResult(_paymentsRepository.Add(request, PaymentStatus.Declined));
+                ? new OkObjectResult(_paymentsRepository.Add(request, PaymentStatus.Authorized).Result.ToPaymentResponse)
+                : new BadRequestObjectResult(_paymentsRepository.Add(request, PaymentStatus.Declined).Result.ToPaymentResponse);
         }
         catch (Exception ex)
         {
