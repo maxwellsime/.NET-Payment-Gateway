@@ -11,7 +11,10 @@ namespace PaymentGateway.Api.Tests.Services;
 public class BankServiceTests
 {
     private static readonly Mock<HttpMessageHandler> MockHttpHandler = new(MockBehavior.Strict);
-    private static readonly HttpClient MockHttpClient = new(MockHttpHandler.Object) { BaseAddress = new Uri("http://localhost:80/") };
+    private static readonly HttpClient MockHttpClient = new(MockHttpHandler.Object) 
+    { 
+        BaseAddress = new Uri(PaymentGatewayTestFixtures.BankURL) 
+    };
     private static readonly BankService BankService = new(MockHttpClient);
 
     [Fact]

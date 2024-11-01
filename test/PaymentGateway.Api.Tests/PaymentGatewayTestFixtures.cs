@@ -5,8 +5,8 @@ namespace PaymentGateway.Api.Tests;
 
 public static class PaymentGatewayTestFixtures
 {
-    public static readonly Guid Id = new("1dd16ebe-cf73-4f2b-8d88-5114b669ebee");
-    public static readonly Guid InvalidId = new("4a89ad4a-3e17-46b8-bab0-ea7683c0ede1");
+    public static readonly string Id = "1dd16ebe-cf73-4f2b-8d88-5114b669ebee";
+    public static readonly string InvalidId = "4a89ad4a-3e17-46b8-bab0-ea7683c0ede1";
     public static readonly string CardNumber = "123456789012345";
     public static readonly int ExpiryMonth = 4;
     public static readonly int ExpiryYear = 2024;
