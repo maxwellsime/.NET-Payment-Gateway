@@ -9,6 +9,8 @@
   <ItemGroup>
     <PackageReference Include="MongoDB.Driver" Version="3.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
+    <PackageReference Include="Testcontainers" Version="4.0.0" />
+    <PackageReference Include="Testcontainers.MongoDB" Version="4.0.0" />
   </ItemGroup>
 
 </Project>

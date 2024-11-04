@@ -13,7 +13,8 @@ public static class PaymentGatewayTestFixtures
     public static readonly int Amount = 100;
     public static readonly string Currency = "GBP";
     public static readonly int Cvv = 123;
-    public static readonly string BankURL = "localhost:8080";
+    public static readonly string BankURL = "localhost:80";
+    public static readonly string MongoDB = "mongodb://localhost/27017";
 
     public static readonly PostPaymentRequest PaymentRequest = new(CardNumber, ExpiryMonth, ExpiryYear, Currency, Amount, Cvv);
     public static readonly PostPaymentRequest RejectedPaymentRequest = new("12345", ExpiryMonth, 2023, Currency, Amount, 111111);
