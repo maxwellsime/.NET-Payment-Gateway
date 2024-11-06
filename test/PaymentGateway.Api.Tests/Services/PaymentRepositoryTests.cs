@@ -28,7 +28,7 @@ public class PaymentRepositoryTests
     }
 
     [Fact]
-    public async Task GetPriorPaymentSuccessfully()
+    public async Task GetPaymentSuccessfullyById()
     {
         // Arrange
         var expectedResponse = _repository.Add(PaymentGatewayTestFixtures.PaymentRequest, PaymentStatus.Authorized).Result;
@@ -41,8 +41,29 @@ public class PaymentRepositoryTests
     }
 
     [Fact]
-    public async Task GetThrowsExceptionUponInvalidGuid()
+    public async Task GetByIdReturnsNull()
     {
+        // Act
+        var response = await _repository.GetById(PaymentGatewayTestFixtures.InvalidId);
+
+        // Assert
+        Assert.Null(response);
+    }
+
+    [Fact]
+    public async Task GetPaymentSuccessfullyByCardNumber()
+    {
+        // Act
+        var response = await _repository.GetByCardNumber(PaymentGatewayTestFixtures.CardNumberLastFour);
+
+        // Assert
+        Assert.Equal(PaymentGatewayTestFixtures.CardNumberLastFour, response[0].CardNumberLastFour);
+    }
+
+    [Fact]
+    public async Task GetByCardNumberReturnsNull()
+    {
+        // Act
         var response = await _repository.GetById("");
 
         // Assert
