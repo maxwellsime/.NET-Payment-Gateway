@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using PaymentGateway.Api.Controllers;
 using PaymentGateway.Api.Enums;
+using PaymentGateway.Api.Models.Entities;
 using PaymentGateway.Api.Models.Requests;
 using PaymentGateway.Api.Models.Responses;
 using PaymentGateway.Api.Services;
@@ -27,7 +28,7 @@ public class PaymentsControllerTests
             })).CreateClient();
 
     [Fact]
-    public async Task RetrievesAPaymentSuccessfully()
+    public async Task GetAPaymentSuccessfullyById()
     {
         // Arrange
         PaymentsRepository
@@ -47,7 +48,7 @@ public class PaymentsControllerTests
     }
 
     [Fact]
-    public async Task Returns404IfPaymentNotFound()
+    public async Task GetByIdReturnsNotFound()
     {
         // Act
         var response = await DefaultClient.GetAsync($"/api/Payments/{PaymentGatewayTestFixtures.InvalidId}");
@@ -57,9 +58,48 @@ public class PaymentsControllerTests
     }
 
     [Fact]
-    public async Task CompletesAnAuthorizedPayment()
+    public async Task GetPaymentHistorySuccessfully()
     {
         // Arrange
+        PaymentsRepository
+            .Setup(repository => repository.GetByCardNumber(It.IsAny<String>()))
+            .Returns(Task.FromResult(new List<Payment> { PaymentGatewayTestFixtures.PaymentRequest.ToEntity(PaymentStatus.Authorized) }))
+            .Verifiable();
+        var client = TestHttpClientFactory();
+
+        // Act
+        var response = await client.GetAsync($"/api/Payments/Multiple/{PaymentGatewayTestFixtures.CardNumber}");
+        var paymentResponse = await response.Content.ReadFromJsonAsync<List<PostPaymentResponse?>>();
+
+        // Assert
+        PaymentsRepository.Verify(repository => repository.GetById(PaymentGatewayTestFixtures.Id), Times.Exactly(1));
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(paymentResponse);
+    }
+
+    [Fact]
+    public async Task GetPaymentsHistoryReturnsNotFound()
+    {
+        // Arrange
+        PaymentsRepository
+            .Setup(repository => repository.GetByCardNumber(It.IsAny<String>()))
+            .Returns(Task.FromResult(new List<Payment>()))
+            .Verifiable();
+        var client = TestHttpClientFactory();
+
+        // Act
+        var response = await client.GetAsync($"/api/Payments/Multiple/{PaymentGatewayTestFixtures.InvalidId}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+
+    [Fact]
+    public async Task CreateAnAuthorizedPayment()
+    {
+        // Arrange
+        BankService.Invocations.Clear();
         PaymentsRepository.Invocations.Clear();
         BankService
             .Setup(bank => bank.MakePaymentAsync(It.IsAny<BankPaymentRequest>()))
@@ -83,7 +123,7 @@ public class PaymentsControllerTests
     }
 
     [Fact]
-    public async Task Returns400IfPaymentDeclined()
+    public async Task CreatePaymentReturns400IfPaymentDeclined()
     {
         // Arrange
         BankService.Invocations.Clear();
