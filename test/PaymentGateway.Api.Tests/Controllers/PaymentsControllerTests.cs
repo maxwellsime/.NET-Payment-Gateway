@@ -38,7 +38,7 @@ public class PaymentsControllerTests
         var client = TestHttpClientFactory();
 
         // Act
-        var response = await client.GetAsync($"/api/Payments/{PaymentGatewayTestFixtures.Id}");
+        var response = await client.GetAsync($"/api/payments/{PaymentGatewayTestFixtures.Id}");
         var paymentResponse = await response.Content.ReadFromJsonAsync<PostPaymentResponse?>();
 
         // Assert
@@ -51,7 +51,7 @@ public class PaymentsControllerTests
     public async Task GetByIdReturnsNotFound()
     {
         // Act
-        var response = await DefaultClient.GetAsync($"/api/Payments/{PaymentGatewayTestFixtures.InvalidId}");
+        var response = await DefaultClient.GetAsync($"/api/payments/{PaymentGatewayTestFixtures.InvalidId}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -68,7 +68,7 @@ public class PaymentsControllerTests
         var client = TestHttpClientFactory();
 
         // Act
-        var response = await client.GetAsync($"/api/Payments/Multiple/{PaymentGatewayTestFixtures.CardNumber}");
+        var response = await client.GetAsync($"/api/payments/multiple/{PaymentGatewayTestFixtures.CardNumber}");
         var paymentResponse = await response.Content.ReadFromJsonAsync<List<PostPaymentResponse?>>();
 
         // Assert
@@ -88,7 +88,7 @@ public class PaymentsControllerTests
         var client = TestHttpClientFactory();
 
         // Act
-        var response = await client.GetAsync($"/api/Payments/Multiple/{PaymentGatewayTestFixtures.InvalidId}");
+        var response = await client.GetAsync($"/api/payments/multiple/{PaymentGatewayTestFixtures.InvalidId}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -112,7 +112,7 @@ public class PaymentsControllerTests
         var client = TestHttpClientFactory();
 
         // Act
-        var response = await client.PostAsync($"/api/Payments/Create-Payment", JsonContent.Create(PaymentGatewayTestFixtures.PaymentRequest));
+        var response = await client.PostAsync($"/api/payments/create-payment", JsonContent.Create(PaymentGatewayTestFixtures.PaymentRequest));
         var paymentResponse = await response.Content.ReadFromJsonAsync<PostPaymentResponse>();
 
         // Assert
@@ -139,7 +139,7 @@ public class PaymentsControllerTests
         var client = TestHttpClientFactory();
 
         // Act
-        var response = await client.PostAsync($"/api/Payments/Create-Payment", JsonContent.Create(PaymentGatewayTestFixtures.PaymentRequest));
+        var response = await client.PostAsync($"/api/payments/create-payment", JsonContent.Create(PaymentGatewayTestFixtures.PaymentRequest));
         var paymentResponse = await response.Content.ReadFromJsonAsync<PostPaymentResponse>();
 
         // Assert
@@ -153,7 +153,7 @@ public class PaymentsControllerTests
     public async Task Returns400IfPaymentRequestRejected()
     {
         // Act
-        var response = await DefaultClient.PostAsync($"/api/Payments/Create-Payment", JsonContent.Create(PaymentGatewayTestFixtures.RejectedPaymentRequest));
+        var response = await DefaultClient.PostAsync($"/api/payments/create-payment", JsonContent.Create(PaymentGatewayTestFixtures.RejectedPaymentRequest));
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);

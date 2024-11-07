@@ -7,7 +7,7 @@ using PaymentGateway.Api.Services;
 
 namespace PaymentGateway.Api.Controllers;
 
-[Route("api/[controller]")]
+[Route("api/payments")]
 [ApiController]
 public class PaymentsController(IPaymentsRepository paymentsRepository, IBankService bankService) : ControllerBase
 {
@@ -26,7 +26,7 @@ public class PaymentsController(IPaymentsRepository paymentsRepository, IBankSer
             : new NotFoundObjectResult($"No payment with id: {id} found.");
     }
 
-    [HttpGet("Multiple/{cardNumberLastFour}")]
+    [HttpGet("multiple/{cardNumberLastFour}")]
     public async Task<ActionResult<List<PostPaymentResponse>>> GetPaymentsHistoryAsync(string cardNumberLastFour) 
     {
         Console.WriteLine($"PaymentsController :: Getting payment history for card ending in {cardNumberLastFour}.");
@@ -41,7 +41,7 @@ public class PaymentsController(IPaymentsRepository paymentsRepository, IBankSer
             : new NotFoundObjectResult($"No payments found for card ending in {cardNumberLastFour}.");
     }
 
-    [HttpPost("Create-Payment")]
+    [HttpPost("create-payment")]
     public async Task<ActionResult<PostPaymentResponse>> CreatePaymentAsync(PostPaymentRequest request)
     {
         Console.WriteLine("PaymentsController :: Making payment.");
