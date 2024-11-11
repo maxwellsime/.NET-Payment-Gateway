@@ -40,7 +40,8 @@ Response:
 
 
 ## Running tests
-Write `dotnet test` inside the terminal.
+Write `dotnet test` inside the terminal. 
+If you don't have some form of docker running the PaymentRepository tests will fail to create testcontainers.
 
 ## TODO
 - [x] Modularize testing
