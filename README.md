@@ -6,10 +6,62 @@ Originally this project was a takehome test that I enjoyed so decided to fully d
 ## Using
 To run locally, write `docker-compose up` inside the terminal. Open the swagger api webpage (https://localhost:8080/swagger/index.html) in a browser of your choosing to access the endpoints.
 
-### Get Payment
+## Endpoints
+### GET /api/payments/{id}
+Gets a payment that is stored in the database by the payment ID, parsed as a url query. Note: Payment IDs are returned upon creation.
 
-### Make Payment
-The mocked bank only has two valid requests.
+200 Response:
+```
+{
+  "_id": "67329a4ee21b53b57fb10b37",
+  "status": 1,
+  "cardNumberLastFour": "8112",
+  "expiryMonth": 1,
+  "expiryYear": 1,
+  "currency": "USD",
+  "amount": 60000
+}
+```
+404 Response:
+```
+"No payment with id: 67329a4ee21b53b52 found."
+```
+
+### GET /api/payments/multiple/{cardNumberLastFour}
+Gets a history of payments stored in the database all linked to the same last four digits of a card number. Note: In a real-world example this would be insufficient, and some form of user_id would be useful.
+
+200 Response:
+```
+[
+  {
+    "_id": "6722a56d2c0acc6c267ba603",
+    "status": 1,
+    "cardNumberLastFour": "8112",
+    "expiryMonth": 1,
+    "expiryYear": 1,
+    "currency": "USD",
+    "amount": 60000
+  },
+  {
+    "_id": "6722a5ab2c0acc6c267ba604",
+    "status": 1,
+    "cardNumberLastFour": "8112",
+    "expiryMonth": 1,
+    "expiryYear": 1,
+    "currency": "USD",
+    "amount": 60000
+  }
+]
+```
+
+404 Response:
+```
+"No payments found for card ending in 2221."
+```
+
+### POST /api/payments/create-payment/
+Creates a payment, saving it to the Mongo DB and hitting the mock bank server.
+
 Request:
 ```
 {
@@ -21,10 +73,20 @@ Request:
   "cvv": 123
 }
 ```
-Response:
+200 Response:
+```
+{
+  "_id": "67329a2fe21b53b57fb10b36",
+  "status": 0,
+  "cardNumberLastFour": "8877",
+  "expiryMonth": 4,
+  "expiryYear": 1,
+  "currency": "GBP",
+  "amount": 100
+}
+```
 
-Request:
-
+The only other valid request the mocked bank intakes:
 ```
 {
   "cardNumber": "2222405343248112",
@@ -35,9 +97,6 @@ Request:
   "cvv": 456
 }
 ```
-Response:
-
-
 
 ## Running tests
 Write `dotnet test` inside the terminal. 
@@ -48,8 +107,6 @@ If you don't have some form of docker running the PaymentRepository tests will f
 - [x] Add MongoDB database
     - [x] Unique models for handling repository service
 - [x] Improved error handling
-- [ ] Implement better logger and logging
-- [ ] Enable full dockerisation, allowing for the app to be run entirely through `docker-compose`
+- [x] Enable full dockerisation, allowing for the app to be run entirely through `docker-compose`
     - [x] Create functional Dockerfile
-    - [ ] Enable configuration through docker-compose
-    - [ ] Enable MongoDB container
+    - [x] Enable MongoDB container
