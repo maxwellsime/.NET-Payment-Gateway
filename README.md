@@ -85,6 +85,29 @@ Request:
   "amount": 100
 }
 ```
+400 Response:
+```
+{
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+  "title": "One or more validation errors occurred.",
+  "status": 400,
+  "errors": {
+    "Currency": [
+      "Currency only accepts 3 character long strings."
+    ],
+    "CardNumber": [
+      "CardNumber only accepts integers between 14 and 19."
+    ],
+    "ExpiryYear": [
+      "ExpiryYear needs to be beyond the current year."
+    ],
+    "ExpiryMonth": [
+      "ExpiryMonth only accepts integers between 1 and 12."
+    ]
+  },
+  "traceId": "00-2c6964409a696a00dc6a685131e22384-4b4c97f9252e2ad8-00"
+}
+```
 
 The only other valid request the mocked bank intakes:
 ```

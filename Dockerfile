@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 
 WORKDIR /src
 ARG BUILD_CONFIGURATION=Release
@@ -15,7 +15,5 @@ RUN dotnet publish "PaymentGateway.Api.csproj" -c $BUILD_CONFIGURATION -o /app/p
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
-EXPOSE 80
-EXPOSE 8080
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "PaymentGateway.Api.dll", "--server.urls", "http://*:80"]]
+ENTRYPOINT ["dotnet", "PaymentGateway.Api.dll"]
