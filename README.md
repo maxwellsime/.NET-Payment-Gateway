@@ -4,7 +4,7 @@ REST API mimicking a payment gateway service using .NET, Swagger, Docker, and Mo
 Originally this project was a takehome test that I enjoyed so decided to fully develop the implementation as a .NET testbed.
 
 ## Using
-To run locally, write `docker-compose up` inside the terminal. Open the swagger api webpage (https://localhost:8080/swagger/index.html) in a browser of your choosing to access the endpoints.
+To run locally, write `docker-compose up` inside the terminal. Open the swagger api webpage (http://localhost:12342/swagger/index.html) in a browser of your choosing to access the endpoints.
 
 ## Endpoints
 ### GET /api/payments/{id}
@@ -124,12 +124,3 @@ The only other valid request the mocked bank intakes:
 ## Running tests
 Write `dotnet test` inside the terminal. 
 If you don't have some form of docker running the PaymentRepository tests will fail to create testcontainers.
-
-## TODO
-- [x] Modularize testing
-- [x] Add MongoDB database
-    - [x] Unique models for handling repository service
-- [x] Improved error handling
-- [x] Enable full dockerisation, allowing for the app to be run entirely through `docker-compose`
-    - [x] Create functional Dockerfile
-    - [x] Enable MongoDB container
